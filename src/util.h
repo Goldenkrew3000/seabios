@@ -50,8 +50,6 @@ int boot_lchs_find_ata_device(struct pci_device *pci, int chanid, int slave,
 
 // bootsplash.c
 void enable_vga_console(void);
-void enable_bootsplash(void);
-void disable_bootsplash(void);
 
 // cdrom.c
 extern struct eltorito_s CDEmu;

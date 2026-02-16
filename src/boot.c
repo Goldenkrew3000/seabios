@@ -719,9 +719,7 @@ interactive_bootmenu(void)
         printf("%s", bootmsg ?: "\nPress ESC for boot menu.\n\n");
         free(bootmsg);
 
-        enable_bootsplash();
         scan_code = get_keystroke(menutime);
-        disable_bootsplash();
         if (scan_code != menukey)
             return;
     }

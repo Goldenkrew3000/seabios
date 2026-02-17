@@ -52,6 +52,10 @@ enable_vga_console(void)
     call16_int10(&br);
 
     // Write to screen.
-    printf("SeaBIOS (version %s)\n", VERSION);
+    if (RF_CONF_OBSCURE_MODE) {
+        printf(rf_conf_obscure_welcome);
+    } else {
+        printf("SeaBIOS (version %s)\n", VERSION);
+    }
     display_uuid();
 }

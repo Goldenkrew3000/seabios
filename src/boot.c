@@ -21,6 +21,7 @@
 #include "string.h" // memset
 #include "util.h" // irqtimer_calc
 #include "tcgbios.h" // tpm_*
+#include "rf_config.h"
 
 /****************************************************************
  * Helper search functions
@@ -680,8 +681,6 @@ get_keystroke(int msec)
  * Boot menu and BCV execution
  ****************************************************************/
 
-#define DEFAULT_BOOTMENU_WAIT 2500
-
 static const char menuchars[] = {
     '1', '2', '3', '4', '5', '6', '7', '8', '9',
     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
@@ -696,30 +695,36 @@ interactive_bootmenu(void)
 {
     if (! CONFIG_BOOTMENU)
         return;
-    int show_boot_menu = romfile_loadint("etc/show-boot-menu", 1);
-    if (!show_boot_menu)
+    if (!RF_CONF_SHOW_BOOT_MENU)
         return;
 
     // skip menu if only one boot device and no TPM
-    if (show_boot_menu == 2 && !tpm_can_show_menu()
+    if (RF_CONF_SHOW_BOOT_MENU == 2 && !tpm_can_show_menu()
         && !hlist_empty(&BootList) && !BootList.first->next) {
         dprintf(1, "Only one boot device present. Skip boot menu.\n");
         printf("\n");
         return;
     }
-
-    int menutime = romfile_loadint("etc/boot-menu-wait", DEFAULT_BOOTMENU_WAIT);
-    int menukey = romfile_loadint("etc/boot-menu-key", 1);
+    
+    int menukey;
+    if (RF_CONF_OBSCURE_MODE) {
+        menukey = RF_CONF_OBSCURE_BOOT_MENU_KEY;
+    } else {
+        menukey = RF_CONF_BOOT_MENU_KEY;
+    }
+    
     int scan_code;
-    if (menutime >= 0) {
+    if (RF_CONF_BOOT_MENU_WAIT >= 0) {
         while (get_keystroke(0) >= 0)
             ;
 
-        char *bootmsg = romfile_loadfile("etc/boot-menu-message", NULL);
-        printf("%s", bootmsg ?: "\nPress ESC for boot menu.\n\n");
-        free(bootmsg);
+        if (RF_CONF_OBSCURE_MODE) {
+            printf(rf_conf_obscure_bootmsg);
+        } else {
+            printf(rf_conf_bootmsg);
+        }
 
-        scan_code = get_keystroke(menutime);
+        scan_code = get_keystroke(RF_CONF_BOOT_MENU_WAIT);
         if (scan_code != menukey)
             return;
     }
@@ -727,7 +732,7 @@ interactive_bootmenu(void)
     while (get_keystroke(0) >= 0)
         ;
 
-    printf("Select boot device:\n\n");
+    printf("\nBoot devices:\n");
     wait_threads();
 
     // Show menu items

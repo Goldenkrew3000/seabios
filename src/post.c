@@ -22,7 +22,6 @@
 #include "output.h" // dprintf
 #include "string.h" // memset
 #include "util.h" // kbd_init
-#include "tcgbios.h" // tpm_*
 
 
 /****************************************************************
@@ -152,17 +151,11 @@ platform_hardware_setup(void)
     // Setup timers and periodic clock interrupt
     timer_setup();
     clock_setup();
-
-    // Initialize TPM
-    tpm_setup();
 }
 
 void
 prepareboot(void)
 {
-    // Change TPM phys. presence state befor leaving BIOS
-    tpm_prepboot();
-
     // Run BCVs
     bcv_prepboot();
 

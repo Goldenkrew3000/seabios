@@ -244,11 +244,7 @@ handle_1a07(struct bregs *regs)
 static void
 handle_1abb(struct bregs *regs)
 {
-    if (!CONFIG_TCGBIOS)
-        return;
-
-    dprintf(DEBUG_tcg, "16: Calling tpm_interrupt_handler\n");
-    call32(tpm_interrupt_handler32, MAKE_FLATPTR(GET_SEG(SS), regs), 0);
+    return;
 }
 
 // Unsupported

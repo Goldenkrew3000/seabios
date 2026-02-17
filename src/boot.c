@@ -20,7 +20,6 @@
 #include "std/disk.h" // struct mbr_s
 #include "string.h" // memset
 #include "util.h" // irqtimer_calc
-#include "tcgbios.h" // tpm_*
 #include "rf_config.h"
 
 /****************************************************************
@@ -699,12 +698,14 @@ interactive_bootmenu(void)
         return;
 
     // skip menu if only one boot device and no TPM
-    if (RF_CONF_SHOW_BOOT_MENU == 2 && !tpm_can_show_menu()
+    /*
+    if (RF_CONF_SHOW_BOOT_MENU == 2
         && !hlist_empty(&BootList) && !BootList.first->next) {
         dprintf(1, "Only one boot device present. Skip boot menu.\n");
         printf("\n");
         return;
     }
+    */
     
     int menukey;
     if (RF_CONF_OBSCURE_MODE) {
@@ -747,9 +748,6 @@ interactive_bootmenu(void)
                , strtcpy(desc, pos->description, ARRAY_SIZE(desc)));
         maxmenu++;
     }
-    if (tpm_can_show_menu()) {
-        printf("\nt. TPM Configuration\n");
-    }
 
     // Get key press.  If the menu key is ESC, do not restart boot unless
     // 1.5 seconds have passed.  Otherwise users (trained by years of
@@ -765,10 +763,6 @@ interactive_bootmenu(void)
 
         scan_code = keystroke >> 8;
         int key_ascii = keystroke & 0xff;
-        if (tpm_can_show_menu() && key_ascii == 't') {
-            printf("\n");
-            tpm_menu();
-        }
         if (scan_code == 1) {
             // ESC
             printf("\n");
@@ -910,8 +904,6 @@ boot_disk(u8 bootdrv, int checksig)
         }
     }
 
-    tpm_add_bcv(bootdrv, MAKE_FLATPTR(bootseg, 0), 512);
-
     /* Canonicalize bootseg:bootip */
     u16 bootip = (bootseg & 0x0fff) << 4;
     bootseg &= 0xf000;
@@ -935,8 +927,6 @@ boot_cdrom(struct drive_s *drive)
 
     u8 bootdrv = CDEmu.emulated_drive;
     u16 bootseg = CDEmu.load_segment;
-
-    tpm_add_cdrom(bootdrv, MAKE_FLATPTR(bootseg, 0), 512);
 
     /* Canonicalize bootseg:bootip */
     u16 bootip = (bootseg & 0x0fff) << 4;
